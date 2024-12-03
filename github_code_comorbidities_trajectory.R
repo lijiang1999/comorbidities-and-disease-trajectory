@@ -4,7 +4,8 @@
 #Step 2. illustrate the comorbidities of Uveitis in the Upset plot using a mapped phecodes matrix file  
 #Step 3. create files to determine each comorbidity before or after Uveitis
 #Step 4. create a combined long-format file with diagonstic order
-#Step 5. demonstrate the disease trajectory of patients with Uveitis using Sankey plot with or without plotly 
+#Step 5. demonstrate the disease trajectory of patients with Uveitis using Sankey plot
+#Step 6. create more interactive Sankey plot using plotly
 
 
 #Step 1.
@@ -382,8 +383,8 @@ overlapping_cases <- intersect(before_id, after_id)  #38
 all_results_combined_filtered_overlapped <- all_results_combined_filtered[all_results_combined_filtered$PT_ID %in% overlapping_cases, ]
 
 ######################################################
-
-#Create Sankey plot with or without plotly 
+#Step 5.
+#Create Sankey plot 
 
 # Load necessary libraries
 library(dplyr)
@@ -391,7 +392,7 @@ library(networkD3)
 
 # Assuming your data is stored in a data frame called 'all_results_combined_filtered'
 
-# Step 1: Preprocess the data
+# Step 5-1: Preprocess the data
 # Find the diagnosis order of Uveitis for each patient
 
 head(all_results_combined_filtered)
@@ -427,14 +428,14 @@ head(all_results_combined_filtered_with_uveitis) #855/747 for all/EUR; #479 for 
 # 5 PT5 unrelated              1        MS                      2 Before Uveitis
 # 6 PT6  leftover              3        MS                      2  After Uveitis
 
-# Step 2: Build the frequency table of conditions before and after Uveitis
+# Step 5-2: Build the frequency table of conditions before and after Uveitis
 condition_counts <- all_results_combined_filtered_with_uveitis %>%
   #filter(cohort == "unrelated") %>%  #apply to unrelated individual only
   group_by(Position, Condition) %>%
   summarise(Count = n(), .groups = "drop")
 head(condition_counts)
 
-# Step 3: Prepare data for Sankey plot
+# Step 5-3: Prepare data for Sankey plot
 # Create nodes and links for the Sankey diagram
 nodes <- data.frame(name = c("Before Uveitis", "After Uveitis", unique(condition_counts$Condition)))
 
@@ -444,7 +445,7 @@ links <- condition_counts %>%
          Target = match(Condition, nodes$name) - 1) %>%  # Match to node indices (conditions start from index 2)
   dplyr::select(Source, Target, Value = Count)
 
-# Step 4: Create Sankey plot
+# Step 5-4: Create Sankey plot
 sankey_data <- list(nodes = nodes, links = links)
 
 # Plot the Sankey diagram
@@ -456,15 +457,16 @@ sankey_plot <- sankeyNetwork(Links = sankey_data$links, Nodes = sankey_data$node
 print(sankey_plot)
 
 #########################
+# Step 6.
 # Create more interactive plot using plotly
 # Install and load plotly package if not already installed
 if (!require("plotly")) install.packages("plotly")
 library(plotly)
 
-# Step 1: Create condition node labels
+# Step 6-1: Create condition node labels
 node_labels <- c("Before Uveitis", "After Uveitis", unique(condition_counts$Condition))
 
-# Step 2: For each condition, attach counts for "Before Uveitis" and "After Uveitis"
+# Step 6-2: For each condition, attach counts for "Before Uveitis" and "After Uveitis"
 for (i in 3:length(node_labels)) {
   condition_name <- node_labels[i]  # The condition name
   
@@ -490,7 +492,7 @@ for (i in 3:length(node_labels)) {
   }
 }
 
-# Step 3: Define a color palette for each node
+# Step 6-3: Define a color palette for each node
 colors <- c(
   "#1f77b4",  # Color for "Before Uveitis"
   "#ff7f0e",  # Color for "After Uveitis"
@@ -507,7 +509,7 @@ colors <- c(
   "#98df8a"   # Color for psoriasis
 )
 
-# Step 4: Prepare the Sankey diagram
+# Step 6-4: Prepare the Sankey diagram
 sankey_plot <- plot_ly(
   type = "sankey",
   domain = list(x = c(0, 1), y = c(0, 1)),
